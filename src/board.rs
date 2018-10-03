@@ -4,23 +4,6 @@
 use std::ops::{Index, IndexMut};
 use rand::prelude::*;   
 use rand::Rng;
-use quicksilver::{
-    Future,
-    load_file,
-    combinators::ok,
-    geom::{
-        Vector,
-        Shape,
-    },
-    graphics::{
-        Image,
-        Background::Img,
-    },
-    lifecycle::{
-        Asset,
-        Window,
-    },
-};
 use std::mem;
 
 // for returning with new tiles
@@ -81,53 +64,8 @@ impl Tile {
     }
 }
 
-// all of the image assets to be used by the game board
-#[allow(dead_code)]
-struct Assets {
-    empty: Asset<Image>,
-    two: Asset<Image>,
-    four: Asset<Image>,
-    eight: Asset<Image>,
-    sixteen: Asset<Image>,
-    thirtytwo: Asset<Image>,
-    sixtyfour: Asset<Image>,
-    onetwentyeight: Asset<Image>,
-    twofiftysix: Asset<Image>,
-    fivetwelve: Asset<Image>,
-    //onethousandtwentyfour: Asset<Image>,
-    //twothousandfortyeight: Asset<Image>,
-}
-
-impl Assets {
-    // loads all images to assets struct
-    fn load() -> Self {
-        Assets {
-            empty: Assets::load_from_file("static/img/empty.png"),
-            two: Assets::load_from_file("static/img/two.png"),
-            four: Assets::load_from_file("static/img/four.png"),
-            eight: Assets::load_from_file("static/img/eight.png"),
-            sixteen: Assets::load_from_file("static/img/sixteen.png"),
-            thirtytwo: Assets::load_from_file("static/img/thirtytwo.png"),
-            sixtyfour: Assets::load_from_file("static/img/sixtyfour.png"),
-            onetwentyeight: Assets::load_from_file("static/img/onetwentyeight.png"),
-            twofiftysix: Assets::load_from_file("static/img/twofiftysix.png"),
-            fivetwelve: Assets::load_from_file("static/img/fivetwelve.png"),
-            //onethousandtwentyfour: Assets::load_from_file("static/img/empty.png"),     // WTF WHERE DID MY FILE GO
-            //twothousandfortyeight: Assets::load_from_file("static/img/empty.png"),     // WTF WHERE DID MY FILE GO
-        }
-    }
-
-    // uses combinators or whatever
-    fn load_from_file(filename: &'static str) -> Asset<Image> {
-        Asset::new(load_file(filename)
-            .and_then(|contents| ok(String::from_utf8(contents).expect("The file must be UTF-8")))
-            .and_then(|image_path| Image::load(image_path)))
-    }
-}
-
 // struct to represent the game board
 pub struct Board {
-    assets: Assets,
     dimensions: (u8, u8),
     current: Vec<Tile>,
     last: Vec<Tile>,
@@ -154,10 +92,8 @@ impl Board {
     // creates a new board with initial
     pub fn new(dimensions: (u8, u8)) -> Self {
         let current = vec![Tile::Empty; (dimensions.0 * dimensions.1) as usize];
-        let assets = Assets::load();
         let last = current.clone();
         Board {
-            assets,
             dimensions,
             current,
             last,
@@ -178,24 +114,6 @@ impl Board {
     fn write_tile(&mut self, (new_tile, coord): (Tile, Coord)) -> &mut Self {
         self[(coord.x, coord.y)] = new_tile;
         self
-    }
-
-    // returns asset for tile type
-    fn asset_from_tile(&mut self, tile: &Tile) -> &mut Asset<Image> {
-        match tile {
-            Tile::Empty => &mut self.assets.empty,
-            Tile::Two => &mut self.assets.two,
-            Tile::Four => &mut self.assets.four,
-            Tile::Eight => &mut self.assets.eight,
-            Tile::Sixteen => &mut self.assets.sixteen,
-            Tile::ThirtyTwo => &mut self.assets.thirtytwo,
-            Tile::SixtyFour => &mut self.assets.sixtyfour,
-            Tile::OneTwentyEight => &mut self.assets.onetwentyeight,
-            Tile::TwoFiftySix => &mut self.assets.twofiftysix,
-            Tile::FiveTwelve => &mut self.assets.fivetwelve,
-            //Tile::OneThousandTwentyFour => &self.assets.onethousandtwentyfour,
-            //Tile::TwoThousandFortyEight => &self.assets.twothousandfortyeight,
-        }
     }
 
     // randomly generates the first tiles
@@ -299,21 +217,5 @@ impl Board {
         }
 
         self
-    }
-
-    // renders the board
-    // NOTE: this is a temporary function, I will make it not shit later.
-    pub fn render(&mut self, window: &mut Window) {
-        for x in 0..self.dimensions.0 {
-            for y in 0..self.dimensions.1 {
-                let loc = Vector::new(self.dimensions.0 * 32, self.dimensions.1 * 32);
-                let tile = self[(x as usize, y as usize)].clone();
-                let mut asset = &mut self.asset_from_tile(&tile);
-                let _ = asset.execute(|image| {
-                    window.draw(&image.area().with_center(loc), Img(&image));
-                    Ok(())
-                });
-            }
-        }
     }
 }

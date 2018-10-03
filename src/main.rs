@@ -80,7 +80,6 @@ impl State for GameState {
         window.clear(Color::WHITE)?;
 
         // actually drawing shit here
-        self.board.render(window);
 
         Ok(())
     }
@@ -92,6 +91,10 @@ fn main() {
     run::<GameState>(
         "A shitty 2048 game I made instead of studying for calc",
         Vector::new(800, 800),
-        Settings::default()
+        Settings {
+            icon_path: Some("img/fivetwelve.png"),
+            ..Settings::default()
+        }
+
     );
 }
