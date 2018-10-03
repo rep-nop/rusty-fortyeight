@@ -80,6 +80,7 @@ impl State for GameState {
         window.clear(Color::WHITE)?;
 
         // actually drawing shit here
+        self.board.render(window);
 
         Ok(())
     }

@@ -5,9 +5,23 @@ use std::ops::{Index, IndexMut};
 use rand::prelude::*;   
 use rand::Rng;
 use quicksilver::{
-    graphics::Image,
-    lifecycle::Asset,
+    Future,
+    load_file,
+    combinators::ok,
+    geom::{
+        Vector,
+        Shape,
+    },
+    graphics::{
+        Image,
+        Background::Img,
+    },
+    lifecycle::{
+        Asset,
+        Window,
+    },
 };
+use std::mem;
 
 // for returning with new tiles
 struct Coord {
@@ -88,19 +102,26 @@ impl Assets {
     // loads all images to assets struct
     fn load() -> Self {
         Assets {
-            empty: Asset::new(Image::load("static/img/empty.png")),
-            two: Asset::new(Image::load("static/img/two.png")),
-            four: Asset::new(Image::load("static/img/four.png")),
-            eight: Asset::new(Image::load("static/img/eight.png")),
-            sixteen: Asset::new(Image::load("static/img/sixteen.png")),
-            thirtytwo: Asset::new(Image::load("static/img/thirtytwo.png")),
-            sixtyfour: Asset::new(Image::load("static/img/sixtyfour.png")),
-            onetwentyeight: Asset::new(Image::load("static/img/onetwentyeight.png")),
-            twofiftysix: Asset::new(Image::load("static/img/twofiftysix.png")),
-            fivetwelve: Asset::new(Image::load("static/img/fivetwelve.png")),
-            //onethousandtwentyfour: Asset::new(Image::load("static/img/empty.png")),     // WTF WHERE DID MY FILE GO
-            //twothousandfortyeight: Asset::new(Image::load("static/img/empty.png")),     // WTF WHERE DID MY FILE GO
+            empty: Assets::load_from_file("static/img/empty.png"),
+            two: Assets::load_from_file("static/img/two.png"),
+            four: Assets::load_from_file("static/img/four.png"),
+            eight: Assets::load_from_file("static/img/eight.png"),
+            sixteen: Assets::load_from_file("static/img/sixteen.png"),
+            thirtytwo: Assets::load_from_file("static/img/thirtytwo.png"),
+            sixtyfour: Assets::load_from_file("static/img/sixtyfour.png"),
+            onetwentyeight: Assets::load_from_file("static/img/onetwentyeight.png"),
+            twofiftysix: Assets::load_from_file("static/img/twofiftysix.png"),
+            fivetwelve: Assets::load_from_file("static/img/fivetwelve.png"),
+            //onethousandtwentyfour: Assets::load_from_file("static/img/empty.png"),     // WTF WHERE DID MY FILE GO
+            //twothousandfortyeight: Assets::load_from_file("static/img/empty.png"),     // WTF WHERE DID MY FILE GO
         }
+    }
+
+    // uses combinators or whatever
+    fn load_from_file(filename: &'static str) -> Asset<Image> {
+        Asset::new(load_file(filename)
+            .and_then(|contents| ok(String::from_utf8(contents).expect("The file must be UTF-8")))
+            .and_then(|image_path| Image::load(image_path)))
     }
 }
 
@@ -160,18 +181,18 @@ impl Board {
     }
 
     // returns asset for tile type
-    fn asset_from_tile(&self, tile: Tile) -> &Asset<Image> {
+    fn asset_from_tile(&mut self, tile: &Tile) -> &mut Asset<Image> {
         match tile {
-            Tile::Empty => &self.assets.empty,
-            Tile::Two => &self.assets.two,
-            Tile::Four => &self.assets.four,
-            Tile::Eight => &self.assets.eight,
-            Tile::Sixteen => &self.assets.sixteen,
-            Tile::ThirtyTwo => &self.assets.thirtytwo,
-            Tile::SixtyFour => &self.assets.sixtyfour,
-            Tile::OneTwentyEight => &self.assets.onetwentyeight,
-            Tile::TwoFiftySix => &self.assets.twofiftysix,
-            Tile::FiveTwelve => &self.assets.fivetwelve,
+            Tile::Empty => &mut self.assets.empty,
+            Tile::Two => &mut self.assets.two,
+            Tile::Four => &mut self.assets.four,
+            Tile::Eight => &mut self.assets.eight,
+            Tile::Sixteen => &mut self.assets.sixteen,
+            Tile::ThirtyTwo => &mut self.assets.thirtytwo,
+            Tile::SixtyFour => &mut self.assets.sixtyfour,
+            Tile::OneTwentyEight => &mut self.assets.onetwentyeight,
+            Tile::TwoFiftySix => &mut self.assets.twofiftysix,
+            Tile::FiveTwelve => &mut self.assets.fivetwelve,
             //Tile::OneThousandTwentyFour => &self.assets.onethousandtwentyfour,
             //Tile::TwoThousandFortyEight => &self.assets.twothousandfortyeight,
         }
@@ -269,10 +290,7 @@ impl Board {
                 println!("Right");
             },
             Some(MoveOpt::Undo) => {
-                let tmp_current = self.current.clone();
-                let tmp_last = self.last.clone();
-                self.current = tmp_last;
-                self.last = tmp_current;
+                mem::swap(&mut self.current, &mut self.last);
                 println!("Undo");
             },
             None => {
@@ -281,5 +299,21 @@ impl Board {
         }
 
         self
+    }
+
+    // renders the board
+    // NOTE: this is a temporary function, I will make it not shit later.
+    pub fn render(&mut self, window: &mut Window) {
+        for x in 0..self.dimensions.0 {
+            for y in 0..self.dimensions.1 {
+                let loc = Vector::new(self.dimensions.0 * 32, self.dimensions.1 * 32);
+                let tile = self[(x as usize, y as usize)].clone();
+                let mut asset = &mut self.asset_from_tile(&tile);
+                let _ = asset.execute(|image| {
+                    window.draw(&image.area().with_center(loc), Img(&image));
+                    Ok(())
+                });
+            }
+        }
     }
 }
