@@ -13,7 +13,7 @@ struct Coord {
 }
 
 impl Coord {
-    // create a new coord   
+    // create a new coord
     fn new(dim: (usize, usize)) -> Self {
         Coord {
             x: dim.0,
@@ -103,11 +103,9 @@ impl Board {
     // compares a new tile to the existing board
     fn tile_exists(&self, coord: &Coord) -> bool {
         let tile = &self[(coord.x as usize, coord.y as usize)];
-        if tile != &Tile::Empty {
-            false
-        } else {
-            true
-        }
+
+        // TODO: is this the correct logic? it was inverted before.
+        tile != &Tile::Empty
     }
 
     // writes a tile to the board
@@ -128,7 +126,7 @@ impl Board {
     }
 
     // compares tile to board returns if a tile exists, and if the tile is == returns new tile type
-    fn compare(&self, tile: &Tile, mov: &Option<MoveOpt>, loc: Coord) -> (bool, Option<Tile>) {
+    fn compare(&self, tile: &Tile, mov: &Option<MoveOpt>, loc: &Coord) -> (bool, Option<Tile>) {
         let target_tile = match mov {
             Some(MoveOpt::Up) => &self[(loc.x, loc.y - 1)],
             Some(MoveOpt::Down) => &self[(loc.x, loc.y + 1)],
@@ -139,9 +137,9 @@ impl Board {
         };
 
         if target_tile == &Tile::Empty {
-            return (false, None)
+            (false, None)
         } else if target_tile == tile {
-            return match tile {
+            match tile {
                 Tile::Two => (true, Some(Tile::Four)),
                 Tile::Four => (true, Some(Tile::Eight)),
                 Tile::Eight => (true, Some(Tile::Sixteen)),
@@ -168,7 +166,7 @@ impl Board {
                     for y in 0..self.dimensions.1 {
                         if y > 0 {
                             let tile = &self[(x as usize, y as usize)];
-                            self.compare(tile, &move_opt, Coord::new((x as usize, y as usize)));
+                            self.compare(tile, &move_opt, &Coord::new((x as usize, y as usize)));
                         }
                     }
                 }
@@ -179,7 +177,7 @@ impl Board {
                     for y in 0..self.dimensions.1 {
                         if y < (self.dimensions.1 - 1) {
                             let tile = &self[(x as usize, y as usize)];
-                            self.compare(tile, &move_opt, Coord::new((x as usize, y as usize)));
+                            self.compare(tile, &move_opt, &Coord::new((x as usize, y as usize)));
                         }
                     }
                 }
@@ -190,7 +188,7 @@ impl Board {
                     for x in 0..self.dimensions.0 {
                         if x > 0 {
                             let tile = &self[(x as usize, y as usize)];
-                            self.compare(tile, &move_opt, Coord::new((x as usize, y as usize)));
+                            self.compare(tile, &move_opt, &Coord::new((x as usize, y as usize)));
                         }
                     }
                 }
@@ -201,7 +199,7 @@ impl Board {
                     for x in 0..self.dimensions.0 {
                         if x < (self.dimensions.0 - 1) {
                             let tile = &self[(x as usize, y as usize)];
-                            self.compare(tile, &move_opt, Coord::new((x as usize, y as usize)));
+                            self.compare(tile, &move_opt, &Coord::new((x as usize, y as usize)));
                         }
                     }
                 }
