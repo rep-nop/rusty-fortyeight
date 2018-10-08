@@ -6,6 +6,7 @@ extern crate rand;
 
 // modules
 mod board;
+mod render;
 
 // namespacing
 use quicksilver::{
@@ -26,6 +27,7 @@ use board::MoveOpt;
 
 struct GameState {
     board: board::Board,
+    sprites: render::SpriteSheet,
     mov_opt: Option<board::MoveOpt>,
 }
 
@@ -34,9 +36,10 @@ impl State for GameState {
     fn new() -> Result<Self> {
         let mut board = board::Board::new((4, 4));
         let mov_opt = None;
+        let sprites = render::SpriteSheet::new((32, 32), (4, 4), "/static/spritesheet1x.png");
         board.starting_tiles();
         
-        let gamestate = GameState { board, mov_opt };
+        let gamestate = GameState { board, sprites, mov_opt };
         
         Ok(gamestate)
     }
