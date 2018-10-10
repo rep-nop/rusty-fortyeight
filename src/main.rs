@@ -36,7 +36,7 @@ impl State for GameState {
     fn new() -> Result<Self> {
         let mut board = board::Board::new((4, 4));
         let mov_opt = None;
-        let sprites = render::SpriteSheet::new((32, 32), (4, 4), "/static/spritesheet1x.png");
+        let sprites = render::SpriteSheet::new((32, 32), (4, 4), "./static/spritesheet2x.png");
         board.starting_tiles();
         
         let gamestate = GameState { board, sprites, mov_opt };
@@ -62,6 +62,9 @@ impl State for GameState {
             // backspace
             Event::Key(Key::Back, ButtonState::Pressed) => {self.mov_opt = Some(MoveOpt::Undo)},
 
+            // escape
+            Event::Key(Key::Escape, ButtonState::Pressed) => {self.mov_opt = Some(MoveOpt::Terminate)},
+
             _ => {},
         }
 
@@ -83,6 +86,7 @@ impl State for GameState {
         window.clear(Color::WHITE)?;
 
         // actually drawing shit here
+        self.render_board_bg(window);
 
         Ok(())
     }
@@ -92,12 +96,8 @@ impl State for GameState {
 fn main() {
     // run the game
     run::<GameState>(
-        "A shitty 2048 game I made instead of studying for calc",
+        "hey look, it's 2048 but in rust!",
         Vector::new(800, 800),
-        Settings {
-            icon_path: Some("img/fivetwelve.png"),
-            ..Settings::default()
-        }
-
+        Settings::default()
     );
 }

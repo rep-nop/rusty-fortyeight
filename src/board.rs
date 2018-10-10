@@ -4,6 +4,7 @@
 use std::ops::{Index, IndexMut};
 use rand::prelude::*;   
 use rand::Rng;
+use std::process;
 use std::mem;
 
 // for returning with new tiles
@@ -22,18 +23,19 @@ impl Coord {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub enum MoveOpt {
     Up,
     Down,
     Left,
     Right,
     Undo,
+    Terminate,
 }
 
 // represents tiles and their values
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Tile {
     Empty,
     Two = 2, 
@@ -45,8 +47,8 @@ pub enum Tile {
     OneTwentyEight = 128,
     TwoFiftySix = 256,
     FiveTwelve = 512,
-    //OneThousandTwentyFour = 1024,
-    //TwoThousandFortyEight = 2048,
+    OneThousandTwentyFour = 1024,
+    TwoThousandFortyEight = 2048,
 }
 
 impl Tile {
@@ -56,7 +58,7 @@ impl Tile {
         let tile = Tile::Two;
         let mut coord = Coord::new((rng.gen_range(0, 3), rng.gen_range(0, 3)));
 
-        while !board.tile_exists(&coord) {
+        while board.tile_exists(&coord) {
             coord = Coord::new((rng.gen_range(0, 3), rng.gen_range(0, 3)));
         }
 
@@ -66,8 +68,8 @@ impl Tile {
 
 // struct to represent the game board
 pub struct Board {
-    dimensions: (u8, u8),
-    current: Vec<Tile>,
+    pub dimensions: (u8, u8),
+    pub current: Vec<Tile>,
     last: Vec<Tile>,
 }
 
@@ -148,8 +150,8 @@ impl Board {
                 Tile::SixtyFour => (true, Some(Tile::OneTwentyEight)),
                 Tile::OneTwentyEight => (true, Some(Tile::TwoFiftySix)),
                 Tile::TwoFiftySix => (true, Some(Tile::FiveTwelve)),
-                //Some(Tile::FiveTwelve) => (true, Some(Tile::OneThousandTwentyFour)),
-                //Some(Tile::OneThousandTwentyFour) => (true, Some(Tile::twothousandfortyeight)),
+                Tile::FiveTwelve => (true, Some(Tile::OneThousandTwentyFour)),
+                Tile::OneThousandTwentyFour => (true, Some(Tile::TwoThousandFortyEight)),
 
                 _ => panic!("this should not happen"),
             }
@@ -208,6 +210,10 @@ impl Board {
             Some(MoveOpt::Undo) => {
                 mem::swap(&mut self.current, &mut self.last);
                 println!("Undo");
+            },
+            Some(MoveOpt::Terminate) => {
+                println!("kill the process!");
+                process::exit(0);
             },
             None => {
                 panic!("this should not happen");
